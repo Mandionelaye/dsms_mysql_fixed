@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  datasource:
+    dakar:
+      jdbc-url: jdbc:mysql://localhost:3306/ventes_dakar?useSSL=false&serverTimezone=UTC
+      username: dsms_user
+      password: dsms_pass
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+    thies:
+      jdbc-url: jdbc:mysql://localhost:3306/ventes_thies?useSSL=false&serverTimezone=UTC
+      username: dsms_user
+      password: dsms_pass
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+    stl:
+      jdbc-url: jdbc:mysql://localhost:3306/ventes_stlouis?useSSL=false&serverTimezone=UTC
+      username: dsms_user
+      password: dsms_pass
+      driver-class-name: com.mysql.cj.jdbc.Driver
+
+sync:
+  interval: 60000

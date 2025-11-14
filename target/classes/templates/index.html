@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des ventes régionales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
+            <span class="text-5xl">🛒</span>
+            <span class="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                Gestion des Ventes Régionales
+            </span>
+        </h1>
+        <p class="text-gray-600 text-lg">Système de gestion multi-régions en temps réel</p>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total des Ventes</p>
+                    <p class="text-3xl font-bold text-gray-800" th:text="${ventes.size()}">0</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Montant Total</p>
+                    <p class="text-3xl font-bold text-gray-800">
+                        <span th:text="${#aggregates.sum(ventes.![montant])}">0</span> FCFA
+                    </p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Régions Actives</p>
+                    <p class="text-3xl font-bold text-gray-800">3</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bloc de verrouillage/déverrouillage de région -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Verrouiller une région</h3>
+        <div class="flex items-center gap-4">
+            <select id="regionLockSelect" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white">
+                <option value="">-- Choisir une région --</option>
+                <option value="dakar">🏙️ Dakar</option>
+                <option value="thies">🌾 Thiès</option>
+                <option value="stlouis">🏛️ Saint-Louis</option>
+            </select>
+            <button onclick="lockRegion()" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-all font-semibold">
+                🔒 Verrouiller
+            </button>
+            <button onclick="unlockRegion()" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all font-semibold">
+                🔓 Déverrouiller
+            </button>
+        </div>
+        <p id="lockStatus" class="text-sm text-gray-500 mt-2"></p>
+    </div>
+
+
+    <!-- Formulaire d'ajout/modification -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-2 rounded-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800" id="formTitle">Ajouter une nouvelle vente</h2>
+        </div>
+
+        <form th:action="@{/add}" method="post" th:object="${vente}" id="venteForm">
+            <input type="hidden" id="venteId" name="id" th:field="*{id}">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                        Produit <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="text"
+                            th:field="*{produit}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            placeholder="Ex: Ordinateur portable"
+                            required>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                        Montant (FCFA) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                            type="number"
+                            step="0.01"
+                            th:field="*{montant}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            placeholder="Ex: 150000"
+                            required>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-gray-700">
+                        Région <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                            name="region"
+                            id="regionSelect"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none bg-white"
+                            required>
+                        <option value="">-- Choisir une région --</option>
+                        <option value="dakar">🏙️ Dakar</option>
+                        <option value="thies">🌾 Thiès</option>
+                        <option value="stlouis">🏛️ Saint-Louis</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button
+                        type="submit"
+                        class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-emerald-700 hover:to-teal-700  transform hover:scale-[1.02] transition-all shadow-lg">
+                    <span id="submitText">✓ Ajouter la vente</span>
+                </button>
+                <button
+                        type="button"
+                        id="cancelBtn"
+                        onclick="resetForm()"
+                        class="hidden px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-all">
+                    ✕ Annuler
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tableau des ventes -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
+            <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                Liste des ventes
+            </h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Produit</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Montant</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Région</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">MAJ</th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                <tr th:each="vente : ${ventes}" class="hover:bg-blue-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full" th:text="${vente.id}">1</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-semibold text-gray-900" th:text="${vente.produit}">Produit X</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-bold text-green-600" th:text="${vente.montant} + ' FCFA'">1000 FCFA</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span th:if="${vente.region == 'dakar'}" class="px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">🏙️ Dakar</span>
+                        <span th:if="${vente.region == 'thies'}" class="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">🌾 Thiès</span>
+                        <span th:if="${vente.region == 'stlouis'}" class="px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-800 rounded-full">🏛️ Saint-Louis</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" th:text="${vente.dateVente}">2025-10-21</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" th:text="${vente.updatedAt}">2025-10-21T10:00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <form th:action="@{/edit/{id}(id=${vente.id})}" method="get" class="inline">
+                                <button
+                                        type="submit"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-all transform hover:scale-110 shadow-md"
+                                        title="Modifier">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                            </form>
+                            <form th:action="@{/delete/{id}/{region}(id=${vente.id},region=${vente.region})}" method="post" class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette vente ?')">
+                                <button
+                                        type="submit"
+                                        class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-all transform hover:scale-110 shadow-md"
+                                        title="Supprimer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${ventes.isEmpty()}">
+                    <td colspan="7" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center text-gray-400">
+                            <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            </svg>
+                            <p class="text-lg font-semibold">Aucune vente enregistrée</p>
+                            <p class="text-sm mt-1">Commencez par ajouter votre première vente</p>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-8 text-gray-500 text-sm">
+        <p>© 2025 Système de Gestion des Ventes - Tous droits réservés</p>
+    </div>
+</div>
+
+<script>
+    function resetForm() {
+        document.getElementById('venteForm').reset();
+        document.getElementById('venteForm').action = '/add';
+        document.getElementById('formTitle').textContent = 'Ajouter une nouvelle vente';
+        document.getElementById('submitText').textContent = '✓ Ajouter la vente';
+        document.getElementById('cancelBtn').classList.add('hidden');
+        document.getElementById('venteId').value = '';
+    }
+
+    // Si on est en mode édition (détecté par la présence d'un ID)
+    window.onload = function() {
+        const venteId = document.getElementById('venteId').value;
+        if (venteId) {
+            document.getElementById('formTitle').textContent = 'Modifier la vente';
+            document.getElementById('submitText').textContent = '✓ Mettre à jour';
+            document.getElementById('cancelBtn').classList.remove('hidden');
+            document.getElementById('venteForm').action = '/update/' + venteId;
+        }
+    }
+    // on bloque et débloque un base de donnée
+    async function lockRegion() {
+        const region = document.getElementById('regionLockSelect').value;
+        if (!region) return alert("Veuillez choisir une région !");
+        try {
+            const res = await fetch(`/api/ventes/lock/${region}`, { method: 'POST' });
+            const text = await res.text();
+            document.getElementById('lockStatus').textContent = text;
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors du verrouillage de la région.");
+        }
+    }
+
+    async function unlockRegion() {
+        const region = document.getElementById('regionLockSelect').value;
+        if (!region) return alert("Veuillez choisir une région !");
+        try {
+            const res = await fetch(`/api/ventes/unlock/${region}`, { method: 'POST' });
+            const text = await res.text();
+            document.getElementById('lockStatus').textContent = text;
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors du déverrouillage de la région.");
+        }
+    }
+
+    // pour quand il change
+     document.getElementById('regionSelect').addEventListener('change', async function() {
+        const region = this.value;
+        if (!region) return;
+        try {
+            const res = await fetch(`/api/ventes/isLocked/${region}`);
+            const isLocked = await res.json();
+            document.getElementById('submitText').parentElement.disabled = isLocked;
+            document.getElementById('submitText').textContent = isLocked ? '❌ Région verrouillée' : '✓ Ajouter la vente';
+        } catch (err) {
+            console.error(err);
+        }
+    });
+</script>
+
+</body>
+</html>
